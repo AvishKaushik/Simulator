@@ -69,7 +69,7 @@ The CSA Simulator emulates core components of a computing system, allowing users
 
 ### Prerequisites
 
-- **Java Development Kit (JDK)**: Ensure you have JDK 8 or above installed on your system.
+- **Java Development Kit (JDK)**: Ensure you have JDK 23 or above installed on your system.
 - **IDE**: You can use any Java-compatible IDE, such as IntelliJ IDEA, Eclipse, or NetBeans.
 
 ### Running the Simulator
