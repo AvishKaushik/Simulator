@@ -4,10 +4,12 @@ import com.csa.simulator.components.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
@@ -16,20 +18,24 @@ import java.util.stream.IntStream;
  * GUI class to create the GUI for the simulator.
  */
 public class GUI extends JFrame {
+    private JTextArea textField, textField2;
     private JLabel[] gpr0Arr,gpr1Arr, gpr2Arr, gpr3Arr, pcLabels, marLabels, mbrLabels, mfrLabels, irLabels;
     private JLabel[][] ixrLabels;
-    private JLabel haltLabel, runLabel;
+    private JLabel haltLabel;
+    private JLabel runLabel;
     private JButton[] loadButtons;
     private CPU cpu;
     private Memory memory;
     private File file;
     private Devices devices;
     char[] switchArray;
+    boolean isProgram1Loaded = false;
 
     /**
      * Start position for vertical alignment
      */
     private final int start = 280;
+    private List<Integer> NumbersList = new ArrayList<Integer>();
 
 
     /**
@@ -39,7 +45,7 @@ public class GUI extends JFrame {
         haltLabel = new JLabel();
         runLabel = new JLabel();
         devices = new Devices();
-        cpu = new CPU();
+        cpu = new CPU(devices);
         memory = new Memory();
 
         switchArray = new char[16];
@@ -62,11 +68,11 @@ public class GUI extends JFrame {
      */
     private void layoutComponents() {
         // Setting up Halt and Run Labels
-        haltLabel.setBounds(730, start + 490, 20, 20);
+        haltLabel.setBounds(510, start + 490, 20, 20);
         haltLabel.setOpaque(true);
         haltLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         haltLabel.setBackground(Color.WHITE);
-        runLabel.setBounds(810, start + 490, 20, 20);
+        runLabel.setBounds(590, start + 490, 20, 20);
         runLabel.setOpaque(true);
         runLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         runLabel.setBackground(Color.WHITE);
@@ -90,7 +96,7 @@ public class GUI extends JFrame {
         JPanel[] panels = new JPanel[5];
         JLabel[] panelLabel = new JLabel[5];
         String[] panelLabels = {"OpCode", "GPR", "IXR", "I", "Address"};
-        int[] xPositions = {435, 660, 780, 890, 1030};
+        int[] xPositions = {215, 440, 560, 670, 810};
         for (int i = 0; i < 5; i++) {
             panels[i] = new JPanel(new FlowLayout(FlowLayout.CENTER, 1, 3));
             panels[i].setBackground(Color.getHSBColor(0.6f, 0.25f, 0.9f));
@@ -103,11 +109,11 @@ public class GUI extends JFrame {
             this.add(panels[i]);
         }
 
-        panels[0].setBounds(300, start + 265, 310, 70);
-        panels[1].setBounds(620, start + 265, 110, 70);
-        panels[2].setBounds(740, start + 265, 110, 70);
-        panels[3].setBounds(860, start + 265, 60, 70);
-        panels[4].setBounds(930, start + 265, 280, 70);
+        panels[0].setBounds(80, start + 265, 310, 70);
+        panels[1].setBounds(400, start + 265, 110, 70);
+        panels[2].setBounds(520, start + 265, 110, 70);
+        panels[3].setBounds(640, start + 265, 60, 70);
+        panels[4].setBounds(710, start + 265, 280, 70);
         return panels;
     }
 
@@ -120,7 +126,7 @@ public class GUI extends JFrame {
 
         // Setting bounds and fonts for all register labels
         int[] yPositions = {0, 30, 60, 90, 120};
-        int[] xPositions = {930, 930, 830, 830, 1130};
+        int[] xPositions = {650, 650, 550, 550, 850};
         for (int i = 0; i < registerLabels.length; i++) {
             registerLabels[i].setBounds(xPositions[i], start + yPositions[i], 40, 20);
             registerLabels[i].setFont(new Font("Arial", Font.BOLD, 14));
@@ -129,12 +135,12 @@ public class GUI extends JFrame {
 
         // Privilege label
         JLabel priv = new JLabel("Privilege");
-        priv.setBounds(1180, start + 150, 100, 20);
+        priv.setBounds(900, start + 150, 100, 20);
         priv.setFont(new Font("Arial", Font.BOLD, 14));
         this.add(priv);
 
 
-        JLabel privLabel = createLabel(1255, start + 150);
+        JLabel privLabel = createLabel(975, start + 150);
         this.add(privLabel);
 
         // Adding labels for GPRs
@@ -144,7 +150,7 @@ public class GUI extends JFrame {
             gprLabel.setFont(new Font("Arial", Font.BOLD, 15));
             this.add(gprLabel);
 
-            mfrLabels[i] = createLabel(1180 + (i * 25), start + 120);
+            mfrLabels[i] = createLabel(900 + (i * 25), start + 120);
             this.add(mfrLabels[i]);
         }
 
@@ -175,8 +181,8 @@ public class GUI extends JFrame {
             ixrLabels[1][i] = createLabel(80 + (i * 25), start + 170);
             ixrLabels[2][i] = createLabel(80 + (i * 25), start + 200);
 
-            mbrLabels[i] = createLabel(880 + (i * 25), start + 60);
-            irLabels[i] = createLabel(880 + (i * 25), start + 90);
+            mbrLabels[i] = createLabel(600 + (i * 25), start + 60);
+            irLabels[i] = createLabel(600 + (i * 25), start + 90);
 
             this.add(gpr0Arr[i]);
             this.add(gpr1Arr[i]);
@@ -191,8 +197,8 @@ public class GUI extends JFrame {
 
         // Adding PC and MAR labels
         for (int i = 0; i < 12; i++) {
-            pcLabels[i] = createLabel(980 + (i * 25), start);
-            marLabels[i] = createLabel(980 + (i * 25), start + 30);
+            pcLabels[i] = createLabel(700 + (i * 25), start);
+            marLabels[i] = createLabel(700 + (i * 25), start + 30);
             this.add(pcLabels[i]);
             this.add(marLabels[i]);
         }
@@ -256,7 +262,7 @@ public class GUI extends JFrame {
             else if (i < 7)
                 loadButtons[i].setBounds(480, start + 140 + ((i - 4) * 30), 50, 20);
             else
-                loadButtons[i].setBounds(1280, start + ((i - 7) * 30), 50, 20);
+                loadButtons[i].setBounds(1000, start + ((i - 7) * 30), 50, 20);
 
             loadButtons[i].addActionListener(this::loadButton);
             this.add(loadButtons[i]);
@@ -269,12 +275,12 @@ public class GUI extends JFrame {
      */
     private void createGeneralLabels() {
         JLabel halt = new JLabel("HALT");
-        halt.setBounds(680, start + 490, 40, 20);
+        halt.setBounds(460, start + 490, 40, 20);
         halt.setFont(new Font("Arial", Font.BOLD, 15));
         this.add(halt);
 
         JLabel run = new JLabel("RUN");
-        run.setBounds(770, start + 490, 40, 20);
+        run.setBounds(550, start + 490, 40, 20);
         run.setFont(new Font("Arial", Font.BOLD, 15));
         this.add(run);
     }
@@ -447,7 +453,7 @@ public class GUI extends JFrame {
                 return;
             }
             short value = cpu.BinaryToDecimal(cpu.MBR, 16);
-            memory.Data[EA] = value;
+            memory.data[EA] = value;
         } catch (Exception ee) {
             cpu.MFR[0] = 1;
             refreshLEDs(11);
@@ -474,7 +480,7 @@ public class GUI extends JFrame {
         }
         short value = cpu.BinaryToDecimal(cpu.MBR, 16);
         try {
-            memory.Data[EA] = value;
+            memory.data[EA] = value;
             EA++;
             cpu.DecimalToBinary(EA, cpu.MAR, 12);
             refreshLEDs(8);
@@ -492,7 +498,7 @@ public class GUI extends JFrame {
         System.out.println("Load Invoked");
         try {
             short EA = cpu.BinaryToDecimal(cpu.MAR, 12);
-            cpu.DecimalToBinary((short) memory.Data[EA], cpu.MBR, 16);
+            cpu.DecimalToBinary((short) memory.data[EA], cpu.MBR, 16);
             refreshLEDs(9);
         } catch (IndexOutOfBoundsException i) {
             JOptionPane.showMessageDialog(this, "Illegal Operation with memory Access", "Error",
@@ -513,8 +519,16 @@ public class GUI extends JFrame {
         if (res == JFileChooser.APPROVE_OPTION) {
             file = new File(fCh.getSelectedFile().getAbsolutePath());
             String filename = file.getAbsolutePath();
+            String[] fullLocation = filename.split("/");
+            filename = fullLocation[fullLocation.length - 1];
+            if(Objects.equals(filename, "Program1.txt")){
+                isProgram1Loaded = true;
+                textField2.setText("Enter 20 numbers to find the nearest number:");
+            }
             JOptionPane.showMessageDialog(this, filename, "File Load Successful", JOptionPane.PLAIN_MESSAGE);
             try {
+                cpu.setPC((short) 48);
+                refreshLEDs(7);
                 ProcessFile();
             } catch (FileNotFoundException fileNotFoundException) {
                 System.out.println(fileNotFoundException.getMessage());
@@ -533,7 +547,7 @@ public class GUI extends JFrame {
             String val = s.next();
             short hexloc = cpu.HexToDecimal(loc);
             short hexval = cpu.HexToDecimal(val);
-            memory.Data[hexloc] = hexval;
+            memory.data[hexloc] = hexval;
             System.out.println(hexloc + " " + hexval);
         }
         s.close();
@@ -551,13 +565,13 @@ public class GUI extends JFrame {
             cpu.MFR[0] = 1;
             refreshLEDs(11);
             cpu.MFHandle(memory);
-            memory.Data[4]++;
-            cpu.DecimalToBinary(memory.Data[4], cpu.PC, 12);
+            memory.data[4]++;
+            cpu.DecimalToBinary(memory.data[4], cpu.PC, 12);
             refreshLEDs(7);
             return;
         }
-        cpu.DecimalToBinary(memory.Data[EA], cpu.IR, 16);
-        cpu.Execute(memory);
+        cpu.DecimalToBinary(memory.data[EA], cpu.IR, 16);
+        cpu.Execute(memory,devices);
 
         for (int i = 0; i < 12; i++)
             refreshLEDs(i);
@@ -566,7 +580,7 @@ public class GUI extends JFrame {
             EA = cpu.BinaryToDecimal(cpu.PC, 12);
         } else if (cpu.BinaryToDecimal(cpu.MFR, 4) > 0) {
             cpu.MFHandle(memory);
-            EA = memory.Data[4];
+            EA = memory.data[4];
             EA++;
         } else
             EA++;
@@ -611,6 +625,35 @@ public class GUI extends JFrame {
         this.setVisible(true);
     }
 
+    private void takeInput(ActionEvent e) throws IOException {
+        if(!isProgram1Loaded) {
+            JOptionPane.showMessageDialog(null,"Please load Program1.txt first","Error",JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        NumbersList.add(Integer.parseInt(textField.getText()));
+        textField2.setText(textField2.getText()+"\n"+textField.getText());
+        textField.setText("");
+
+        if(NumbersList.size() == 20){
+            String userInput = JOptionPane.showInputDialog(null, "Enter any number to find closest", "", JOptionPane.QUESTION_MESSAGE);
+            textField.setText(userInput);
+
+            int nearestNumber = NumbersList.getFirst();
+            int minDifference = Math.abs(nearestNumber - Integer.parseInt(userInput));
+
+            for (int number : NumbersList) {
+                int difference = Math.abs((number - Integer.parseInt(userInput)));
+                if (difference < minDifference) {
+                    minDifference = difference;
+                    nearestNumber = number;
+                }
+            }
+            textField2.setText(textField2.getText()+"\nNearest number:"+Integer.toString(nearestNumber)+"\n***********************");
+            NumbersList = new ArrayList<Integer>();
+        }
+
+    }
+
     /**
      * Method to load the GUI.
      */
@@ -625,28 +668,28 @@ public class GUI extends JFrame {
         this.add(team);
         JButton store = new JButton("Store");
         store.addActionListener(this::Store);
-        store.setBounds(375, start + 400, 70, 35);
+        store.setBounds(155, start + 400, 70, 35);
         this.add(store);
         JButton st_plus = new JButton("St+");
         st_plus.addActionListener(this::StorePlus);
-        st_plus.setBounds(450, start + 400, 70, 35);
+        st_plus.setBounds(230, start + 400, 70, 35);
         this.add(st_plus);
         JButton resetAll = new JButton("Reset All");
         resetAll.addActionListener(this::resetAll);
-        resetAll.setBounds(750, start + 400, 70, 35);
+        resetAll.setBounds(530, start + 400, 70, 35);
         this.add(resetAll);
         JButton resetHalt = new JButton("Reset Halt");
         resetHalt.addActionListener(this::resetHalt);
-        resetHalt.setBounds(825, start + 400, 170, 35);
+        resetHalt.setBounds(605, start + 400, 170, 35);
         this.add(resetHalt);
         JButton load = new JButton();
         load.setText("Load");
-        load.setBounds(525, start + 400, 70, 35);
+        load.setBounds(305, start + 400, 70, 35);
         load.addActionListener(this::LoadValue);
         load.setEnabled(true);
         this.add(load);
         JButton init = new JButton("IPL");
-        init.setBounds(1000, start + 403, 65, 27);
+        init.setBounds(780, start + 403, 65, 27);
         init.setBackground(Color.getHSBColor(1f,0.7f,1f));
         init.setForeground(Color.white);
         init.setOpaque(true);
@@ -656,10 +699,10 @@ public class GUI extends JFrame {
         this.add(init);
 
         JButton ss = new JButton("SS");
-        ss.setBounds(600, start + 400, 65, 35);
+        ss.setBounds(380, start + 400, 65, 35);
         ss.addActionListener(this::execCode);
         JButton run = new JButton("Run");
-        run.setBounds(675, start + 400, 65, 35);
+        run.setBounds(455, start + 400, 65, 35);
         run.addActionListener(e -> {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
@@ -671,6 +714,48 @@ public class GUI extends JFrame {
             worker.execute();
         });
         run.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+
+        //Input Field
+
+        JLabel keyBoard = new JLabel("Keyboard");
+        textField = new JTextArea();
+        keyBoard.setBounds(1250, 250, 300, 50);
+        keyBoard.setFont(new Font("Arial", Font.BOLD, 20));
+        textField.setBounds(1150, 300, 300, 100);
+        textField.setFont(new Font("Arial", Font.BOLD, 12));
+        JScrollPane scrollPane2 = new JScrollPane(textField);
+        scrollPane2.setBounds(1150, 300, 300, 100);
+        this.add(keyBoard);
+        this.add(scrollPane2);
+
+
+        JLabel printer = new JLabel("Printer");
+        textField2 = new JTextArea();
+        printer.setBounds(1270, start+150, 300, 50);
+        printer.setFont(new Font("Arial", Font.BOLD, 20));
+        textField2.setLineWrap(true);
+        textField2.setBounds(1150, start+200, 300, 100);
+        textField2.setFont(new Font("Arial", Font.BOLD, 12));
+        JScrollPane scrollPane = new JScrollPane(textField2);
+        scrollPane.setBounds(1150, start+200, 300, 100);
+        this.add(printer);
+        this.add(scrollPane);
+        //Load Button
+        JButton inputNumber = new JButton("Insert");
+        inputNumber.setBounds(1250, start+130, 100, 30);
+        inputNumber.setBackground(Color.getHSBColor(1f,0.7f,1f));
+        inputNumber.setForeground(Color.white);
+        inputNumber.setOpaque(true);
+        inputNumber.setBorderPainted(false);
+        inputNumber.setFont(new Font("Arial", Font.BOLD, 14));
+        inputNumber.addActionListener(e -> {
+            try {
+                takeInput(e);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+        this.add(inputNumber);
         this.add(ss);
         this.add(run);
         runMainLoop();
