@@ -10,7 +10,7 @@ public class Converter
     /**
      * Function to convert Binary number to Decimal number in an array.
      */
-    public short BinaryToDecimal(char Bin[],int length){
+    public short BinaryToDecimal(char[] Bin, int length){
         short result=0;
         short base=1;
         for(int i=0; i <length ; i++){
@@ -52,6 +52,21 @@ public class Converter
             char c = s.charAt(i);
             short d = (short)digits.indexOf(c);
             val = (short)(16*val + d);
+        }
+        return val;
+    }
+
+    /**
+     * Function to convert Octal number to Decimal number in an array.
+     */
+    public short OctToDecimal(String s){
+        String digits = "01234567";
+        s = s.toUpperCase();
+        short val = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            short d = (short)digits.indexOf(c);
+            val = (short)(8*val + d);
         }
         return val;
     }

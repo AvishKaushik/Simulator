@@ -531,10 +531,10 @@ public class GUI extends JFrame {
         while (s.hasNext()) {
             String loc = s.next();
             String val = s.next();
-            short hexloc = cpu.HexToDecimal(loc);
-            short hexval = cpu.HexToDecimal(val);
-            memory.Data[hexloc] = hexval;
-            System.out.println(hexloc + " " + hexval);
+            short octLoc = cpu.OctToDecimal(loc);
+            short octVal = cpu.OctToDecimal(val);
+            memory.Data[octLoc] = octVal;
+            System.out.println(octLoc + " " + octVal);
         }
         s.close();
     }
