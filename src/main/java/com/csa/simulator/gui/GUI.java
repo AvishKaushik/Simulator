@@ -30,6 +30,8 @@ public class GUI extends JFrame {
     private Devices devices;
     char[] switchArray;
     boolean isProgram1Loaded = false;
+    boolean isProgram2Loaded = false;
+    String program2Para = "";
 
     /**
      * Start position for vertical alignment
@@ -522,16 +524,40 @@ public class GUI extends JFrame {
             String[] fullLocation = filename.split("/");
             filename = fullLocation[fullLocation.length - 1];
             if(Objects.equals(filename, "Program1.txt")){
+                if(isProgram2Loaded) {
+                    JOptionPane.showMessageDialog(this, "Program2.txt is already loaded. Please run the program first", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 isProgram1Loaded = true;
                 textField2.setText("Enter 20 numbers to find the nearest number:");
+                JOptionPane.showMessageDialog(this, filename, "File Load Successful", JOptionPane.PLAIN_MESSAGE);
+                try {
+                    cpu.setPC((short) 48);
+                    refreshLEDs(7);
+                    ProcessFile();
+                } catch (FileNotFoundException fileNotFoundException) {
+                    System.out.println(fileNotFoundException.getMessage());
+                }
             }
-            JOptionPane.showMessageDialog(this, filename, "File Load Successful", JOptionPane.PLAIN_MESSAGE);
-            try {
-                cpu.setPC((short) 48);
-                refreshLEDs(7);
-                ProcessFile();
-            } catch (FileNotFoundException fileNotFoundException) {
-                System.out.println(fileNotFoundException.getMessage());
+            if(Objects.equals(filename, "Program2.txt")){
+                if(isProgram1Loaded) {
+                    JOptionPane.showMessageDialog(this, "Program1.txt is already loaded. Please run the program first", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                isProgram2Loaded = true;
+                JOptionPane.showMessageDialog(this, filename, "File Load Successful", JOptionPane.PLAIN_MESSAGE);
+                try {
+                    ProcessFile();
+                    ProcessFile2();
+                } catch (FileNotFoundException fileNotFoundException) {
+                    System.out.println(fileNotFoundException.getMessage());
+                }
+                String[] sentences = program2Para.split("\\.\\s*");
+                textField2.setText("The sentences in the paragraph are:");
+                for (int i = 0; i < sentences.length; i++) {
+                    textField2.setText(textField2.getText()+"\n"+(i + 1) + ": " + sentences[i]);
+                }
+                textField2.setText(textField2.getText()+"\n"+"Enter the word :");
             }
         }
     }
@@ -545,12 +571,28 @@ public class GUI extends JFrame {
         while (s.hasNext()) {
             String loc = s.next();
             String val = s.next();
-            short hexloc = cpu.OctToDecimal(loc);
-            short hexval = cpu.OctToDecimal(val);
-            memory.data[hexloc] = hexval;
-            System.out.println(hexloc + " " + hexval);
+            short octLoc = cpu.OctToDecimal(loc);
+            short octVal = cpu.OctToDecimal(val);
+            memory.data[octLoc] = octVal;
+            System.out.println(octLoc + " " + octVal);
         }
         s.close();
+    }
+
+
+    /**
+     * Method to process the file.
+     * @throws FileNotFoundException if the file is not found
+     */
+    private void ProcessFile2() throws FileNotFoundException {
+        File para = new File("public/Paragraph.txt");
+        Scanner fileScanner = new Scanner(para);
+        StringBuilder paragraphBuilder = new StringBuilder();
+        while (fileScanner.hasNextLine()) {
+            paragraphBuilder.append(fileScanner.nextLine()).append(" ");
+        }
+        fileScanner.close();
+        program2Para = paragraphBuilder.toString().trim();
     }
 
     /**
@@ -625,11 +667,7 @@ public class GUI extends JFrame {
         this.setVisible(true);
     }
 
-    private void takeInput(ActionEvent e) throws IOException {
-        if(!isProgram1Loaded) {
-            JOptionPane.showMessageDialog(null,"Please load Program1.txt first","Error",JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+    private void program1() {
         NumbersList.add(Integer.parseInt(textField.getText()));
         textField2.setText(textField2.getText()+"\n"+textField.getText());
         textField.setText("");
@@ -648,10 +686,44 @@ public class GUI extends JFrame {
                     nearestNumber = number;
                 }
             }
-            textField2.setText(textField2.getText()+"\nNearest number:"+Integer.toString(nearestNumber)+"\n***********************");
-            NumbersList = new ArrayList<Integer>();
+            textField2.setText(textField2.getText()+"\nNearest number:"+ nearestNumber +"\n***********************");
+            NumbersList = new ArrayList<>();
+            isProgram1Loaded=false;
+        }
+    }
+
+    private void program2() {
+        String[] sentences = program2Para.split("\\.\\s*");
+        String word = textField.getText();
+        textField2.setText(textField2.getText()+"\n"+word);
+        boolean found = false;
+        for (int i = 0; i < sentences.length; i++) {
+            String[] words = sentences[i].split("\\s+");
+            for (int j = 0; j < words.length; j++) {
+                if (words[j].replaceAll("[^a-zA-Z]", "").equalsIgnoreCase(word)) {
+                    textField2.setText(textField2.getText()+"\n"+"Found the word \"" + word + "\" in sentence " + (i + 1) +
+                            ", word number " + (j + 1));
+                    found = true;
+                }
+            }
         }
 
+        if (!found) {
+            textField2.setText(textField2.getText()+"\n"+"The word \"" + word + "\" was not found in the paragraph.");
+        }
+        textField2.setText(textField2.getText()+"\n*********************************************************************");
+        isProgram2Loaded=false;
+    }
+
+    private void takeInput(ActionEvent e) throws IOException {
+        if(isProgram1Loaded) {
+            program1();
+        } else if(isProgram2Loaded) {
+            program2();
+        } else {
+            JOptionPane.showMessageDialog(null,"Please load Program1.txt or Program2.txt first","Error",JOptionPane.ERROR_MESSAGE);
+            return;
+        }
     }
 
     /**
@@ -719,30 +791,30 @@ public class GUI extends JFrame {
 
         JLabel keyBoard = new JLabel("Keyboard");
         textField = new JTextArea();
-        keyBoard.setBounds(1250, 250, 300, 50);
+        keyBoard.setBounds(1350, 250, 500, 50);
         keyBoard.setFont(new Font("Arial", Font.BOLD, 20));
-        textField.setBounds(1150, 300, 300, 100);
+        textField.setBounds(1150, 300, 500, 200);
         textField.setFont(new Font("Arial", Font.BOLD, 12));
         JScrollPane scrollPane2 = new JScrollPane(textField);
-        scrollPane2.setBounds(1150, 300, 300, 100);
+        scrollPane2.setBounds(1150, 300, 500, 200);
         this.add(keyBoard);
         this.add(scrollPane2);
 
 
         JLabel printer = new JLabel("Printer");
         textField2 = new JTextArea();
-        printer.setBounds(1270, start+150, 300, 50);
+        printer.setBounds(1370, start+250, 500, 50);
         printer.setFont(new Font("Arial", Font.BOLD, 20));
         textField2.setLineWrap(true);
-        textField2.setBounds(1150, start+200, 300, 100);
+        textField2.setBounds(1150, start+300, 500, 200);
         textField2.setFont(new Font("Arial", Font.BOLD, 12));
         JScrollPane scrollPane = new JScrollPane(textField2);
-        scrollPane.setBounds(1150, start+200, 300, 100);
+        scrollPane.setBounds(1150, start+300, 500, 200);
         this.add(printer);
         this.add(scrollPane);
         //Load Button
         JButton inputNumber = new JButton("Insert");
-        inputNumber.setBounds(1250, start+130, 100, 30);
+        inputNumber.setBounds(1350, start+230, 100, 30);
         inputNumber.setBackground(Color.getHSBColor(1f,0.7f,1f));
         inputNumber.setForeground(Color.white);
         inputNumber.setOpaque(true);
