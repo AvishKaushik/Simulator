@@ -585,7 +585,7 @@ public class GUI extends JFrame {
      * @throws FileNotFoundException if the file is not found
      */
     private void ProcessFile2() throws FileNotFoundException {
-        File para = new File("public/Paragraph.txt");
+        File para = new File("Paragraph.txt");
         Scanner fileScanner = new Scanner(para);
         StringBuilder paragraphBuilder = new StringBuilder();
         while (fileScanner.hasNextLine()) {
