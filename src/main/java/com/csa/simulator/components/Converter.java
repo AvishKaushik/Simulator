@@ -54,6 +54,22 @@ public class Converter
         return val;
     }
 
+
+    /*
+    Function to convert Octal number to Decimal number in an array.
+     */
+    public short OctToDecimal(String s){
+        String digits = "01234567";
+        s = s.toUpperCase();
+        short val = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            short d = (short)digits.indexOf(c);
+            val = (short)(8*val + d);
+        }
+        return val;
+    }
+
     public static int hexStringToInt(String hexString) {
         // Parse the hexadecimal string to an integer
         return Integer.parseInt(hexString, 16);
